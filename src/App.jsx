@@ -1,122 +1,80 @@
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
+import { useMemo, useState } from 'react'
+import Escena, { VISTA_GENERAL, destinoMusculo } from './components/Escena'
+import Panel from './components/Panel'
+import { MUSCULOS } from './data/musculos'
 import './App.css'
 
-function App() {
-  const [count, setCount] = useState(0)
+const CAPAS = [
+  { id: 'musculos', titulo: 'Músculos' },
+  { id: 'huesos', titulo: 'Huesos' },
+  { id: 'nervios', titulo: 'Nervios' },
+  { id: 'vasos', titulo: 'Vasos' },
+  { id: 'silueta', titulo: 'Silueta' },
+]
+
+export default function App() {
+  const [seleccion, setSeleccion] = useState(null)
+  const [pestana, setPestana] = useState('musculo')
+  const [capas, setCapas] = useState({ musculos: true, huesos: true, nervios: false, vasos: false, silueta: true })
+
+  const musculo = MUSCULOS.find((m) => m.id === seleccion)
+
+  // A dónde va la cámara: al músculo elegido o a la vista general
+  const destino = useMemo(() => (musculo ? destinoMusculo(musculo) : { ...VISTA_GENERAL }), [musculo])
+
+  const seleccionar = (id) => {
+    setSeleccion(id)
+    setPestana('musculo')
+  }
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+    <div className={'app' + (musculo ? ' con-panel' : '')}>
+      <Escena
+        seleccion={seleccion}
+        pestana={pestana}
+        capas={capas}
+        destino={destino}
+        onSeleccionar={seleccionar}
+      />
 
-      <div className="ticks"></div>
+      <header className="barra">
+        <h1>
+          Anatomía <span>3D</span>
+        </h1>
+        {!musculo && (
+          <div className="capas">
+            {CAPAS.map((c) => (
+              <button
+                key={c.id}
+                className={'capa' + (capas[c.id] ? ' activa' : '')}
+                onClick={() => setCapas({ ...capas, [c.id]: !capas[c.id] })}
+              >
+                {c.titulo}
+              </button>
+            ))}
+          </div>
+        )}
+      </header>
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
+      {musculo ? (
+        <Panel
+          musculo={musculo}
+          pestana={pestana}
+          onPestana={setPestana}
+          onVolver={() => setSeleccion(null)}
+        />
+      ) : (
+        <div className="ayuda">
+          <p>Tocá un músculo para entrar · Arrastrá para girar · Pellizcá para hacer zoom</p>
+          <div className="lista-musculos">
+            {MUSCULOS.map((m) => (
+              <button key={m.id} className="chip" onClick={() => seleccionar(m.id)}>
+                {m.nombre}
+              </button>
+            ))}
+          </div>
         </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+      )}
+    </div>
   )
 }
-
-export default App
